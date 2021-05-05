@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Intercom (1) (org.telegram.RakhaHasse)" />
+        <module name="Intercom" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

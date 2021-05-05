@@ -1,10 +1,9 @@
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Objects;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class DataManager {
     private static DataManager instance = null;
@@ -20,7 +19,6 @@ public class DataManager {
                 actualTables.remove(i);
                 break;
             }
-
         }
     }
 
@@ -28,13 +26,22 @@ public class DataManager {
         actualTables.remove(table);
     }
 
-    public String[] getActualTable(String tableName) {
+    public String[] getActualTable(String source, String tableName) {
         String[] result = null;
-        for (String[] actualTable : actualTables) {
-            if (actualTable[0].equals(tableName)) {
-                result = actualTable;
-                break;
+        try(Statement statement = Service.connect.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT name FROM Tables WHERE source = " + source+ " AND table = " + tableName
+            );
+            resultSet.next();
+            ArrayList <String> array = new ArrayList<String>();
+            array.add(resultSet.getString("table"));
+            for (int i = 1; resultSet.next(); i++){
+                array.add(i, resultSet.getString("name"));
             }
+            result = new String[array.size()];
+            array.toArray(result);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
         return result;
     }
@@ -45,19 +52,29 @@ public class DataManager {
         return instance;
     }
     private DataManager() {
-        actualTables.add(new String[]{"Community", "UserID", "Username", "Status"});
-        actualTables.add(new String[]{"Black List", "UserID", "Reason"});
-        actualTables.add(new String[]{"Staff", "UserID", "Status"});
-        DBTypes.add(SQLite); DBTypes.add(PostgreSQl);
-    }
+        this.Service = new DBConnect("jdbc:sqlite:Service.db","SQLite");
+        }
 
     // перечисление доступных типов баз данных
-    private final String[] SQLite = new String[]{"sqlite", "jdbc:sqlite:"},
-            PostgreSQl = new String[]{"postgresql", "org:posgresql:"};
-    private final ArrayList<String[]> DBTypes = new ArrayList<String[]>();
 
     private final ArrayList<DBConnect> Connections = new ArrayList<DBConnect>();
     private DBConnect Current;
+    private final DBConnect Service;
+
+    private String getServicePrefix(String type){
+        try (Statement statement = Service.connect.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT prefix FROM types WHERE type = "+type.toLowerCase(Locale.ROOT)
+
+            );
+            resultSet.next();
+            return resultSet.getString("prefix");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return null;
+        }
+
+    }
 
     class DBConnect {
         String source;
@@ -78,10 +95,11 @@ public class DataManager {
                 throwables.printStackTrace();
             }
             // Выполняем подключение к базе данных
-            source = SQLite[1]+"Intercom.db";
-            type = SQLite[0];
+            type = "SQLite";
+            source = "Intercom.db";
+
             try {
-                this.connect = DriverManager.getConnection(source);
+                this.connect = DriverManager.getConnection(getServicePrefix(type)+source);
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
@@ -89,12 +107,12 @@ public class DataManager {
         }
 
         //Full version. For any type DataBase.
-        public DBConnect(@NotNull String source, @NotNull String type) {
+        public DBConnect( String source,  String type) {
             Connections.add(this);
             this.source = source;
             this.type = type;
             //Для/For SQLite
-            if (type.equalsIgnoreCase(SQLite[0])) {
+            if (type.equalsIgnoreCase("SQLite")) {
                 // Регистрируем драйвер, с которым будем работать
                 // в нашем случае Sqlite
                 try {
@@ -104,13 +122,13 @@ public class DataManager {
                 }
                 // Выполняем подключение к базе данных
                 try {
-                    this.connect = DriverManager.getConnection(source);
+                    this.connect = DriverManager.getConnection(getServicePrefix(type)+source);
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
             }
             //Для/For PostgreSQL
-            if (type.equalsIgnoreCase(PostgreSQl[0])) {
+            if (type.equalsIgnoreCase("PostgreSQl")) {
                 // Регистрируем драйвер, с которым будем работать
                 // в нашем случае PostgreSQL
                 try {
@@ -120,7 +138,7 @@ public class DataManager {
                 }
                 // Выполняем подключение к базе данных
                 try {
-                    this.connect = DriverManager.getConnection(source);
+                    this.connect = DriverManager.getConnection(getServicePrefix(type)+source);
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
@@ -135,7 +153,7 @@ public class DataManager {
             this.source = source;
             try {
                 this.connect.close();
-                this.connect = DriverManager.getConnection(source);
+                this.connect = DriverManager.getConnection(getServicePrefix(type)+source);
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
@@ -293,7 +311,7 @@ public class DataManager {
         return true;
     }
 
-    @Nullable
+
     private String getToFind(String[] table, String[] criteria) {
         String toFind = null;
         for (int i = 0; i < criteria.length; i++) {
@@ -411,18 +429,18 @@ public class DataManager {
 
     }
 
-    public boolean addRowIntoCommunity (@NotNull String UserID, @NotNull String Username, String Status){
-        return addRow(getActualTable("Community"),new String[]{UserID,Username,
+    public boolean addRowIntoCommunity ( String UserID, String Username, String Status){
+        return addRow(getActualTable(Current.source,"Community"),new String[]{UserID,Username,
                 (Status==null)?"":Status});
     }
 
-    public boolean addRowIntoBlackList (@NotNull String UserID, String Reason){
-        return addRow(getActualTable("Black List"),new String[]{UserID,
+    public boolean addRowIntoBlackList ( String UserID, String Reason){
+        return addRow(getActualTable(Current.source,"BlackList"),new String[]{UserID,
                 (Reason==null)?"":Reason});
     }
 
-    public boolean addRowIntoStaff (@NotNull String UserID, String Status){
-        return addRow(getActualTable("Staff"),new String[]{UserID,
+    public boolean addRowIntoStaff ( String UserID, String Status){
+        return addRow(getActualTable(Current.source,"Staff"),new String[]{UserID,
                 (Status==null)?"":Status});
     }
 
@@ -445,10 +463,16 @@ public class DataManager {
     }
 
     public String getSource (String address, String type){
-        for (String [] example: DBTypes)
-            if (example[0].equalsIgnoreCase(type))
-                return example[1]+address;
-        return null;
+        try (Statement statement = Service.connect.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT prefix FROM types WHERE type = "+type.toLowerCase(Locale.ROOT)
+            );
+            resultSet.next();
+                return resultSet.getString("prefix")+address;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return null;
+        }
     }
 
     protected boolean deleteFirstRow (String [] table, String [] rowToFind){

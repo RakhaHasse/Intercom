@@ -16,9 +16,7 @@ public class Speaker extends TelegramLongPollingBot {
 
             // Register your newly created Bot
             Speaker speaker = new Speaker();
-            speaker.setBotToken("1738130684:AAEpSZLrQYOZ4zVpQU69LBPgDVIN18LRmow");
-            speaker.setBotUsername("RakhaHasseTestBot");
-            speaker.setOwnerID("401800130");
+
             botsApi.registerBot(speaker);
 
         } catch (TelegramApiException e) {

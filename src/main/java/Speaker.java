@@ -57,9 +57,8 @@ public class Speaker extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         System.out.println("Update got");
-        //Echo(update);
         setOfficeByUpdate(update);
-
+        setOwnerByUpdate(update);
         OfficeIntoPersonal(update);
         PersonalIntoOffice(update);
 
@@ -135,5 +134,11 @@ public class Speaker extends TelegramLongPollingBot {
         }
     }
 
-
+    public void setOwnerByUpdate (Update update){
+        if (update.getMessage().getChatId()>-1 &&
+                update.getMessage().getText().contains("/setOwner") &&
+        update.getMessage().getText().contains(BotToken)){
+            setOwnerID(update.getMessage().getFrom().getId().toString());
+        }
+    }
 }

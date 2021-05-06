@@ -16,8 +16,12 @@ public class Speaker extends TelegramLongPollingBot {
 
             // Register your newly created Bot
             Speaker speaker = new Speaker();
-
+            speaker.setBotUsername(DataManager.getInstance().getBotUsername());
+            speaker.setBotToken(DataManager.getInstance().getBotToken());
+            speaker.setOwnerID(DataManager.getInstance().getOwnerID());
+            speaker.setDestination(Long.parseLong(DataManager.getInstance().getOfficeID()));
             botsApi.registerBot(speaker);
+            System.out.println("Successfully launch bot");
 
         } catch (TelegramApiException e) {
             e.printStackTrace();
@@ -87,11 +91,13 @@ public class Speaker extends TelegramLongPollingBot {
             Office office = new Office(message.getChatId());
             setDestination(office);
             System.out.println("Office successful set");
+            DataManager.getInstance().setOfficeID(office.getChatID().toString());
         }
     }
 
     public void PersonalIntoOffice(Update update){
-        if (update.getMessage().getChatId()>-1){
+        if (update.getMessage().getChatId()>-1 &&
+                DataManager.getInstance().checkUserID(update)){
             ForwardMessage result = new ForwardMessage();
             result.setChatId(destination.getChatID().toString());
             result.setFromChatId(update.getMessage().getChatId().toString());
@@ -101,6 +107,9 @@ public class Speaker extends TelegramLongPollingBot {
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
+            DataManager.getInstance().addMessage(
+                    update.getMessage().getText(),update.getMessage().getFrom().getId(),
+                    update.getMessage().getMessageId());
         }
     }
 
@@ -110,10 +119,12 @@ public class Speaker extends TelegramLongPollingBot {
         update.getMessage().getReplyToMessage().getFrom().getUserName().equals(BotUsername)){
             SendMessage result = new SendMessage();
             result.setChatId(update.getMessage().getReplyToMessage().getForwardFrom().getId().toString());
-            result.setText( "To this your ask:\n"+
-                    update.getMessage().getReplyToMessage().getText()+
-                    "...\n\nWe answer this:\n"+
-                    update.getMessage().getText());
+            result.setText(update.getMessage().getText());
+            int replyID = DataManager.getInstance().getMessageID(
+                    update.getMessage().getReplyToMessage().getForwardFrom().getId(),
+                    update.getMessage().getReplyToMessage().getText()
+            );
+            if (replyID > 0) result.setReplyToMessageId(replyID);
             try {
                 execute(result);
             } catch (TelegramApiException e) {
@@ -136,9 +147,10 @@ public class Speaker extends TelegramLongPollingBot {
 
     public void setOwnerByUpdate (Update update){
         if (update.getMessage().getChatId()>-1 &&
-                update.getMessage().getText().contains("/setOwner") &&
+                update.getMessage().getText().contains("/setowner") &&
         update.getMessage().getText().contains(BotToken)){
             setOwnerID(update.getMessage().getFrom().getId().toString());
+            DataManager.getInstance().setOwnerID(update.getMessage().getFrom().getId().toString());
         }
     }
 }

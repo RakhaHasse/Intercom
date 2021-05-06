@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="Intercom.db" uuid="066ffab5-88d1-4c3a-952a-982d0ee6cdcf">
+    <data-source source="LOCAL" name="Intercom.db" uuid="6f8ad83a-8153-4ce9-b35b-f1519103bb65">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
-      <remarks>SQLite DataBase for quick start</remarks>
+      <remarks>Default Data Base for work with Telegram</remarks>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/Intercom.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:Intercom.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="SQLite - Service.db" uuid="2a21a515-fab8-4ea6-b5ec-483819d58d15">
+    <data-source source="LOCAL" name="Servce.db" uuid="acd7a881-b0d9-45ab-a7c0-2a82807f2938">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
-      <remarks>Service internal data base</remarks>
+      <remarks>Service DataManager DataBase</remarks>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:Service.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>

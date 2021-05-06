@@ -1,36 +1,54 @@
+import org.telegram.telegrambots.meta.api.objects.Update;
+
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
+import java.util.Date;
 
 
 public class DataManager {
     private static DataManager instance = null;
-    private final ArrayList<String[]> actualTables = new ArrayList<String[]>();
 
-    public void addToActualTables(String[] table) {
-        actualTables.add(table);
-    }
-
-    public void removeFromActualTables(String tableName) {
-        for (int i = 0; i < actualTables.size(); i++) {
-            if (actualTables.get(i)[0].equals(tableName)) {
-                actualTables.remove(i);
-                break;
+    public void addToActualTables(String source, String[] table) {
+        try(Statement statement = Service.connect.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT type FROM connections WHERE source = " + source+ " ; "
+            );
+            resultSet.next();
+            String type = resultSet.getString("type");
+            resultSet.close();
+            StringBuilder sql = new StringBuilder("INSERT INTO Tables (type,source,\"table\",name) VALUES ");
+            for (int i = 1; table.length>i; i++){
+                sql.append("(").append(type).append(", ").append(source).append(", ").append(table[0]).
+                        append(", ").append(table[i]).append(")");
+                if (table.length>i+1) sql.append(", ");
+                else sql.append("; ");
             }
+            statement.executeQuery(sql.toString());
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
     }
 
-    public void removeFromActualTables(String[] table) {
-        actualTables.remove(table);
+    public void removeFromActualTables(String source, String tableName) {
+        try(Statement statement = Service.connect.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT name INTO Tables WHERE source = "+
+                            source+" AND \"table\" = \""+tableName+"\"; "
+            );
+            for (int i = 0; resultSet.next();i++){
+                resultSet.deleteRow();
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
     }
 
     public String[] getActualTable(String source, String tableName) {
         String[] result = null;
         try(Statement statement = Service.connect.createStatement()) {
             ResultSet resultSet = statement.executeQuery(
-                    "SELECT name FROM Tables WHERE source = " + source+ " AND table = " + tableName
+                    "SELECT name FROM Tables WHERE source = " + source+ " AND \"table\" = " + tableName
             );
             resultSet.next();
             ArrayList <String> array = new ArrayList<String>();
@@ -51,9 +69,11 @@ public class DataManager {
         if (instance == null) instance = new DataManager();
         return instance;
     }
+
     private DataManager() {
         this.Service = new DBConnect("jdbc:sqlite:Service.db","SQLite");
-        }
+        QuickStart();
+    }
 
     // перечисление доступных типов баз данных
 
@@ -62,10 +82,10 @@ public class DataManager {
     private final DBConnect Service;
 
     private String getServicePrefix(String type){
+
         try (Statement statement = Service.connect.createStatement()) {
             ResultSet resultSet = statement.executeQuery(
-                    "SELECT prefix FROM types WHERE type = "+type.toLowerCase(Locale.ROOT)
-
+                    "SELECT prefix FROM types WHERE type = \""+type.toLowerCase(Locale.ROOT)+"\";"
             );
             resultSet.next();
             return resultSet.getString("prefix");
@@ -107,9 +127,9 @@ public class DataManager {
         }
 
         //Full version. For any type DataBase.
-        public DBConnect( String source,  String type) {
+        public DBConnect( String DriverPlusPath,  String type) {
             Connections.add(this);
-            this.source = source;
+            this.source = DriverPlusPath;
             this.type = type;
             //Для/For SQLite
             if (type.equalsIgnoreCase("SQLite")) {
@@ -122,7 +142,7 @@ public class DataManager {
                 }
                 // Выполняем подключение к базе данных
                 try {
-                    this.connect = DriverManager.getConnection(getServicePrefix(type)+source);
+                    this.connect = DriverManager.getConnection(DriverPlusPath);
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
@@ -138,7 +158,7 @@ public class DataManager {
                 }
                 // Выполняем подключение к базе данных
                 try {
-                    this.connect = DriverManager.getConnection(getServicePrefix(type)+source);
+                    this.connect = DriverManager.getConnection(DriverPlusPath);
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
@@ -489,4 +509,133 @@ public class DataManager {
 
     }
 
+    protected String getBotToken(){
+        try (Statement statement = Service.connect.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT Parameter_value FROM Launch WHERE Parameter_name = \"BotToken\";"
+            );
+            resultSet.next();
+            return resultSet.getString("Parameter_value");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return null;
+        }
+    }
+
+    protected String getOfficeID (){
+        try (Statement statement = Service.connect.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT Parameter_value FROM Launch WHERE Parameter_name = \"OfficeID\";"
+            );
+            resultSet.next();
+            return resultSet.getString("Parameter_value");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return null;
+        }
+    }
+
+    protected String getBotUsername (){
+        try (Statement statement = Service.connect.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT Parameter_value FROM Launch WHERE Parameter_name = \"BotUsername\";"
+            );
+            resultSet.next();
+            return resultSet.getString("Parameter_value");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return null;
+        }
+    }
+
+    protected String getOwnerID () {
+        try (Statement statement = Service.connect.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT Parameter_value FROM Launch WHERE Parameter_name = \"OwnerID\";"
+            );
+            resultSet.next();
+            return resultSet.getString("Parameter_value");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    protected void setOwnerID(String OwnerID){
+        try (Statement statement = Service.connect.createStatement()) {
+            statement.execute("UPDATE Launch SET Parameter_value = \""+OwnerID+
+                    "\" WHERE Parameter_name = \"OwnerID\";");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    protected void setOfficeID (String OfficeID){
+        try (Statement statement = Service.connect.createStatement()) {
+            statement.execute("UPDATE Launch SET Parameter_value = \""+OfficeID+
+                    "\" WHERE Parameter_name = \"OfficeID\";");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    protected boolean checkUserID (Update update){
+        try (Statement statement = Current.connect.createStatement()){
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT * From Community Where UserID = "+
+                            update.getMessage().getFrom().getId()+"; "
+            );
+            if (!resultSet.next()) {
+                addRowIntoCommunity(update.getMessage().getFrom().getId().toString(),
+                        update.getMessage().getFrom().getUserName(),
+                        "User");
+                return true;
+            }
+            else {
+                resultSet.close();
+                resultSet = statement.executeQuery(
+                        "SELECT * From BlackList Where UserID = "+
+                                update.getMessage().getFrom().getId()+"; "
+                );
+                if (!resultSet.next()) return true;
+                else return false;
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return false;
+        }
+    }
+
+    protected void addMessage (String messageText, Long UserID, int MessageID){
+        try (Statement statement = Current.connect.createStatement()) {
+            Date date = new Date();
+            statement.execute(
+                "INSERT INTO messages (UserID, message_id, message, upontime) Values ("
+                        +UserID+", "+MessageID+ ", \""+messageText +"\","+ date.getTime() +")"
+        );
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    protected int getMessageID (Long UserID, String MessageText){
+        try (Statement statement = Current.connect.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(
+                    "Select message_id from messages where UserID = "+
+                            UserID+" AND message = \""+MessageText+"\"; "
+            );
+            if (resultSet.next()){
+                int result = resultSet.getInt("message_id");
+                do {
+                 if (result<resultSet.getInt("message_id"))
+                     result=resultSet.getInt("message_id");
+                } while (resultSet.next())   ;
+                return result;
+            }
+            else return -1;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return -2;
+        }
+    }
 }

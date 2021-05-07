@@ -65,6 +65,7 @@ public class Speaker extends TelegramLongPollingBot {
         setOwnerByUpdate(update);
         OfficeIntoPersonal(update);
         PersonalIntoOffice(update);
+        blockUser(update);
 
     }
 
@@ -151,6 +152,29 @@ public class Speaker extends TelegramLongPollingBot {
         update.getMessage().getText().contains(BotToken)){
             setOwnerID(update.getMessage().getFrom().getId().toString());
             DataManager.getInstance().setOwnerID(update.getMessage().getFrom().getId().toString());
+        }
+    }
+
+    public void blockUser (Update update){
+        if (update.getMessage().getChatId().equals(destination.getChatID())&&
+                update.getMessage().getText().contains("/block") &&
+                update.getMessage().isReply() &&
+                update.getMessage().getFrom().getUserName().equals(BotUsername) &&
+                update.getMessage().getReplyToMessage().getForwardFrom() != null
+        ){
+            String reason = update.getMessage().getText().replace("/block", "");
+            DataManager.getInstance().addRowIntoBlackList(
+                    update.getMessage().getReplyToMessage().getForwardFrom().getId().toString(),
+                    reason
+            );
+            SendMessage result = new SendMessage();
+            result.setText("You are blocked for talk with us by reason: "+reason);
+            result.setChatId(update.getMessage().getReplyToMessage().getForwardFrom().getId().toString());
+            try {
+                execute(result);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

@@ -75,8 +75,6 @@ public class DataManager {
         QuickStart();
     }
 
-    // перечисление доступных типов баз данных
-
     private final ArrayList<DBConnect> Connections = new ArrayList<DBConnect>();
     private DBConnect Current;
     private final DBConnect Service;
@@ -444,8 +442,9 @@ public class DataManager {
             return true;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+            return false;
         }
-        return false;
+
 
     }
 
@@ -455,6 +454,13 @@ public class DataManager {
     }
 
     public boolean addRowIntoBlackList ( String UserID, String Reason){
+        try (Statement statement = Current.getConnect().createStatement()) {
+            statement.execute(
+                    "UPDATE Community SET Status = \"blocked\" where UserID = "+ Long.parseLong(UserID)
+            );
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
         return addRow(getActualTable(Current.source,"BlackList"),new String[]{UserID,
                 (Reason==null)?"":Reason});
     }

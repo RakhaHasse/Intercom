@@ -72,9 +72,114 @@ public class DataManager {
 
     private DataManager() {
         this.Service = new DBConnect("jdbc:sqlite:Service.db","SQLite");
+        boolean check = true;
+        try (Statement statement = Service.connect.createStatement()) {
+        statement.execute(
+                "Select * from Launch"
+        );
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            check = false;
+        }
+        if (!check) {
+            try (Statement statement = Service.connect.createStatement()){
+                statement.execute("CREATE TABLE \"Launch\" (\n" +
+                        "\t\"Parameter_name\"\tTEXT NOT NULL UNIQUE,\n" +
+                        "\t\"Parameter_value\"\tTEXT NOT NULL,\n" +
+                        "\tPRIMARY KEY(\"Parameter_name\")\n" +
+                        ")"
+                );
+                statement.execute(
+                        "insert into Launch (Parameter_name, Parameter_value) Values \n" +
+                                "(\"BotToken\",\"placeholder\"),\n" +
+                                "(\"BotUsername\", \"placeholder\"),\n" +
+                                "(\"OwnerID\", \"placeholder\"),\n" +
+                                "(\"OfficeID\", \"placeholder\");"
+
+                );
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+        try (Statement statement = Service.connect.createStatement()) {
+            statement.execute(
+                    "Select * from types"
+            );
+            check = true;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            check = false;
+        }
+        if (!check) {
+            try (Statement statement = Service.getConnect().createStatement()){
+                statement.execute(
+                        "CREATE TABLE \"types\" (\n" +
+                                "\t\"id\"\tINTEGER NOT NULL UNIQUE,\n" +
+                                "\t\"prefix\"\tTEXT NOT NULL UNIQUE,\n" +
+                                "\t\"type\"\tTEXT NOT NULL UNIQUE,\n" +
+                                "\tPRIMARY KEY(\"id\" AUTOINCREMENT)\n" +
+                                ") "
+                );
+                statement.execute("insert into types (type,prefix) Values \n" +
+                        "(\"sqlite\",\"jdbc:sqlite:\"),\n" +
+                        "(\"postgresql\", \"org:posgresql:\");");
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+                check = false;
+            }
+        }
+        try (Statement statement = Service.connect.createStatement()) {
+            statement.execute(
+                    "Select * from connections"
+            );
+            check = true;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            check = false;
+        }
+        if (!check)
+            try (Statement statement = Service.connect.createStatement()) {
+                statement.execute(
+                        "CREATE TABLE \"connections\" (\n" +
+                                "\t\"id\"\tINTEGER NOT NULL UNIQUE,\n" +
+                                "\t\"type\"\tTEXT NOT NULL,\n" +
+                                "\t\"source\"\tTEXT NOT NULL UNIQUE,\n" +
+                                "\tFOREIGN KEY(\"type\") REFERENCES \"types\"(\"type\"),\n" +
+                                "\tPRIMARY KEY(\"id\" AUTOINCREMENT)\n" +
+                                ");\n"
+                );
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        try (Statement statement = Service.connect.createStatement()) {
+            statement.execute(
+                    "Select * from Tables"
+            );
+            check = true;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            check = false;
+        }
+        if (!check)
+            try (Statement statement = Service.getConnect().createStatement()) {
+                statement.execute(
+                        "CREATE TABLE \"Tables\" (\n" +
+                                "\t\"id\"\tINTEGER NOT NULL UNIQUE,\n" +
+                                "\t\"type\" TEXT NOT NULL,\n" +
+                                "\t\"source\" TEXT NOT NULL,\n" +
+                                "\t\"table\"\tTEXT NOT NULL,\n" +
+                                "\t\"name\"\tTEXT NOT NULL,\n" +
+                                "\t\"data_type\"\tTEXT,\n" +
+                                "\tPRIMARY KEY(\"id\" AUTOINCREMENT),\n" +
+                                "\tFOREIGN KEY (\"source\") REFERENCES connections (source),\n" +
+                                "\tFOREIGN KEY (\"type\") REFERENCES types (type)\n" +
+                                ")"
+                );
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         QuickStart();
     }
-
     private final ArrayList<DBConnect> Connections = new ArrayList<DBConnect>();
     private DBConnect Current;
     private final DBConnect Service;
@@ -181,6 +286,104 @@ public class DataManager {
     public void QuickStart() {
         Current = new DBConnect();
         Connections.add(Current);
+        boolean check = true;
+        try (Statement statement = Current.connect.createStatement()) {
+            statement.execute(
+                    "Select * from Community"
+            );
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            check = false;
+        }
+        if (!check)
+            try (Statement statement = Current.getConnect().createStatement()) {
+                statement.execute(
+                        "CREATE TABLE \"Community\" (\n" +
+                                "\t\"UserID\"\tINTEGER NOT NULL UNIQUE,\n" +
+                                "\t\"Username\"\tTEXT,\n" +
+                                "\t\"Status\"\tTEXT,\n" +
+                                "\tPRIMARY KEY(\"UserID\")\n" +
+                                ")"
+                );
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        try (Statement statement = Current.connect.createStatement()) {
+            statement.execute(
+                    "Select * from BlackList"
+
+            );
+            check = true;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            check = false;
+        }
+        if (!check)
+            try (Statement statement = Current.getConnect().createStatement()) {
+                statement.execute(
+                        "CREATE TABLE \"BlackList\" (\n" +
+                                "\t\"id\"\tINTEGER NOT NULL UNIQUE,\n" +
+                                "\t\"UserID\"\tINTEGER NOT NULL UNIQUE,\n" +
+                                "\t\"Reason\"\tTEXT,\n" +
+                                "\tFOREIGN KEY(\"UserID\") REFERENCES \"Community\"(\"UserID\"),\n" +
+                                "\tPRIMARY KEY(\"id\")\n" +
+                                ")"
+                );
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        try (Statement statement = Current.connect.createStatement()) {
+            statement.execute(
+                    "Select * from Staff"
+
+            );
+            check = true;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            check = false;
+        }
+        if (!check)
+            try (Statement statement = Current.getConnect().createStatement()) {
+                statement.execute(
+                        "CREATE TABLE \"Staff\" (\n" +
+                                "\t\"id\"\tINTEGER NOT NULL UNIQUE,\n" +
+                                "\t\"UserID\"\tINTEGER NOT NULL UNIQUE,\n" +
+                                "\t\"Status\"\tTEXT,\n" +
+                                "\tPRIMARY KEY(\"id\"),\n" +
+                                "\n" +
+                                "FOREIGN KEY (UserID) REFERENCES Community(UserID)\n" +
+                                " )"
+                );
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        try (Statement statement = Current.connect.createStatement()) {
+            statement.execute(
+                    "Select * from messages"
+
+            );
+            check = true;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            check = false;
+        }
+        if (!check)
+            try (Statement statement = Current.getConnect().createStatement()) {
+                statement.execute(
+                        "CREATE TABLE messages(\n" +
+                                "   id INTEGER NOT NULL UNIQUE,\n" +
+                                "   UserID INTEGER NOT NULL,\n" +
+                                "   message_id INTEGER NOT NULL,\n" +
+                                "   message TEXT NOT NULL,\n" +
+                                "   upontime INTEGER NOT NULL,\n" +
+                                "   PRIMARY KEY (id AUTOINCREMENT),\n" +
+                                "   FOREIGN KEY (UserID) \n" +
+                                "      REFERENCES Community (UserID)\n" +
+                                ")"
+                );
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
     }
 
     public DBConnect findDB(String keyword) {

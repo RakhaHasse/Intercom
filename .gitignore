@@ -1,6 +1,9 @@
 # Compiled class file
 *.class
 
+#IDEA Settings Folder
+/.idea/
+
 # Log file
 *.log
 
@@ -9,6 +12,9 @@
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
+
+#XML files
+*.xml
 
 # Package Files #
 *.jar
@@ -24,3 +30,5 @@ hs_err_pid*
 
 # Data Base files
 *.db
+
+

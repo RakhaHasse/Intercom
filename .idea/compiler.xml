@@ -11,9 +11,15 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="Intercom" target="15" />
+      <module name="Intercom" target="11" />
       <module name="Intercom (1) (org.telegram.RakhaHasse)" target="15" />
       <module name="Intercom1" target="15" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="Intercom" options="--add-modules java.sql" />
+      <module name="Intercom (1) (org.telegram.RakhaHasse)" options="--add-modules java.sql" />
+    </option>
   </component>
 </project>

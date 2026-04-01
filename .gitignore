@@ -25,3 +25,6 @@ replay_pid*
 
 #DataBase files
 *.db
+
+#Launch configuration file
+launch.config

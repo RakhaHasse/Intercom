@@ -1,5 +1,3 @@
-/.idea/dataSorces/
-
 # Compiled class file
 *.class
 
@@ -25,5 +23,5 @@
 hs_err_pid*
 replay_pid*
 
-#DataBase files
+#Database files
 *.db
